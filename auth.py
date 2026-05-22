@@ -30,12 +30,7 @@ def handle_oauth_callback():
     code = st.query_params.get("code")
     state = st.query_params.get("state")
 
-    if not code or not state:
-        return None
-
-    saved_state = st.session_state.get("oauth_state")
-    if not saved_state or state != saved_state:
-        st.error("Security mismatch. Please try signing in again.")
+    if not code:
         return None
 
     token_data = {
