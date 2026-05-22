@@ -11,9 +11,11 @@ def _schema():
 
 def get_conn():
     cfg = {k: v for k, v in st.secrets["snowflake"].items() if v}
-    key_path = cfg.pop("private_key_path", None)
-    if key_path:
-        cfg["private_key_file"] = key_path
+    key_pem = cfg.pop("private_key", None)
+    if key_pem:
+        from cryptography.hazmat.primitives import serialization
+        key = serialization.load_pem_private_key(key_pem.encode(), password=None)
+        cfg["private_key"] = key
     conn = snowflake.connector.connect(**cfg)
     with conn.cursor() as cur:
         cur.execute(f"USE SCHEMA {_schema()}")
