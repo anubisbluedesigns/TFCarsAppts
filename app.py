@@ -26,6 +26,7 @@ if "code" in st.query_params and "user" not in st.session_state:
             st.stop()
         agent = get_agent_by_email(email)
         if agent:
+            agent = {k.lower(): v for k, v in agent.items()}
             st.session_state.user = user_info
             st.session_state.agent = agent
             st.rerun()
