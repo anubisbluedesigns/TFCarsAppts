@@ -1,5 +1,6 @@
 SUBARU_BLUE = "#004890"
 CHEVY_GOLD = "#B6862D"
+TF_CARS_TEAL = "#00897B"
 MT_TZ = "America/Denver"
 EDIT_WINDOW_MINUTES = 3
 APP_NAME = "Agent Call Logger"

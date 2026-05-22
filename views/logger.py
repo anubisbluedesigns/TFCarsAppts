@@ -22,6 +22,7 @@ def show():
             "Call Type",
             ["Inbound", "Outbound"],
             horizontal=True,
+            index=1,
             key="call_type",
             label_visibility="collapsed",
         )
