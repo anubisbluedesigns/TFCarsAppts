@@ -158,14 +158,14 @@ def get_dod():
         SELECT
             'Today' AS period,
             COUNT(*) AS calls,
-            SUM(CASE WHEN appointment THEN 1 ELSE 0 END) AS appointments
+            COALESCE(SUM(CASE WHEN appointment THEN 1 ELSE 0 END), 0) AS appointments
         FROM call_logs
         WHERE logged_date = CURRENT_DATE
         UNION ALL
         SELECT
             'Yesterday',
             COUNT(*),
-            SUM(CASE WHEN appointment THEN 1 ELSE 0 END)
+            COALESCE(SUM(CASE WHEN appointment THEN 1 ELSE 0 END), 0)
         FROM call_logs
         WHERE logged_date = DATEADD(DAY, -1, CURRENT_DATE)
     """)
@@ -175,7 +175,7 @@ def get_mom():
         WITH current_month AS (
             SELECT
                 COUNT(*) AS calls,
-                SUM(CASE WHEN appointment THEN 1 ELSE 0 END) AS appointments
+                COALESCE(SUM(CASE WHEN appointment THEN 1 ELSE 0 END), 0) AS appointments
             FROM call_logs
             WHERE logged_date >= DATE_TRUNC('MONTH', CURRENT_DATE)
                 AND logged_date <= CURRENT_DATE
@@ -183,7 +183,7 @@ def get_mom():
         last_month AS (
             SELECT
                 COUNT(*) AS calls,
-                SUM(CASE WHEN appointment THEN 1 ELSE 0 END) AS appointments
+                COALESCE(SUM(CASE WHEN appointment THEN 1 ELSE 0 END), 0) AS appointments
             FROM call_logs
             WHERE logged_date >= DATE_TRUNC('MONTH', DATEADD(MONTH, -1, CURRENT_DATE))
                 AND logged_date <= DATEADD(MONTH, -1, CURRENT_DATE)
