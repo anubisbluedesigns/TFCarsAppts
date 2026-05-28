@@ -28,12 +28,12 @@ def show():
         )
 
     with col2:
-        appointment = st.radio(
-            "Appointment Scheduled?",
-            [False, True],
-            format_func=lambda x: "No" if not x else "✓ Yes",
+        appointment_type = st.radio(
+            "Appointment Type",
+            [None, "Main Shop", "Express Service"],
+            format_func=lambda x: "No Appointment" if x is None else x,
             horizontal=True,
-            key="appointment",
+            key="appointment_type",
             label_visibility="collapsed",
         )
 
@@ -42,7 +42,7 @@ def show():
         <div style="text-align: center; font-size: 1.1rem; margin-bottom: 0.5rem;">
             <strong>{call_type}</strong>
             ·
-            {"✅ Appointment" if appointment else "❌ No Appointment"}
+            {"✅ " + appointment_type if appointment_type else "❌ No Appointment"}
         </div>
         """,
         unsafe_allow_html=True,
@@ -50,12 +50,12 @@ def show():
 
     if st.button("💾 Save Call", type="primary", use_container_width=True):
         try:
-            log_call(email, call_type, appointment)
+            log_call(email, call_type, appointment_type)
             st.toast("Call saved!", icon="✅")
             if "call_type" in st.session_state:
                 del st.session_state["call_type"]
-            if "appointment" in st.session_state:
-                del st.session_state["appointment"]
+            if "appointment_type" in st.session_state:
+                del st.session_state["appointment_type"]
             st.rerun()
         except Exception as e:
             st.error(f"Failed to save call: {e}")
@@ -71,7 +71,7 @@ def show():
     for row in recent:
         logged_at = row["LOGGED_AT"]
         if isinstance(logged_at, datetime):
-            age_seconds = (datetime.now(mtz) - logged_at.astimezone(mtz)).total_seconds()
+            age_seconds = (datetime.now(mtz) - mtz.localize(logged_at)).total_seconds()
         else:
             age_seconds = 99999
 
@@ -80,12 +80,13 @@ def show():
 
         cols = st.columns([2, 1.2, 0.8, 0.8, 1.2])
         with cols[0]:
-            time_str = logged_at.astimezone(mtz).strftime("%I:%M %p") if isinstance(logged_at, datetime) else str(logged_at)
+            time_str = mtz.localize(logged_at).strftime("%I:%M %p") if isinstance(logged_at, datetime) else str(logged_at)
             st.text(time_str)
         with cols[1]:
             st.text("📥 Inbound" if row["CALL_TYPE"] == "Inbound" else "📤 Outbound")
         with cols[2]:
-            st.text("✅" if row["APPOINTMENT"] else "—")
+            val = row["APPOINTMENT_TYPE"]
+            st.text(val if val else "—")
         with cols[3]:
             st.text(f"{int(age_minutes)}m" if can_edit else "")
         with cols[4]:
@@ -106,10 +107,11 @@ def show():
                     index=0 if log["CALL_TYPE"] == "Inbound" else 1,
                     horizontal=True, key=f"et_{row['LOG_ID']}",
                 )
+                current_appt = log.get("APPOINTMENT_TYPE")
                 na = st.radio(
-                    "Appt", [False, True],
-                    index=1 if log["APPOINTMENT"] else 0,
-                    format_func=lambda x: "No" if not x else "✓ Yes",
+                    "Appt", [None, "Main Shop", "Express Service"],
+                    index=0 if current_appt is None else (1 if current_appt == "Main Shop" else 2),
+                    format_func=lambda x: "No Appointment" if x is None else x,
                     horizontal=True, key=f"ea_{row['LOG_ID']}",
                 )
                 reason = st.text_area("Reason for edit", key=f"er_{row['LOG_ID']}")
@@ -124,7 +126,7 @@ def show():
                                 edit_log(
                                     row["LOG_ID"], email,
                                     log["CALL_TYPE"], nc,
-                                    log["APPOINTMENT"], na,
+                                    log["APPOINTMENT_TYPE"], na,
                                     reason.strip(),
                                 )
                                 st.toast("Call updated!", icon="✏️")
